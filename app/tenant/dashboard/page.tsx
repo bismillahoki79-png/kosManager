@@ -1,14 +1,15 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import InvoiceHistory from "@/components/tenant/InvoiceHistory";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { CalendarDays, Home, CreditCard, LogOut } from "lucide-react";
 
 export default async function TenantDashboard() {
   const supabase = await createClient();
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
+  // Redirect if not logged in
+  const { data: { user } } = await supabase.auth.getUser();
   if (!user) {
     redirect("/login");
   }
@@ -33,59 +34,98 @@ export default async function TenantDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
-      <div className="max-w-4xl mx-auto">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">
-            Dashboard Penyewa
-          </h1>
-          <form action="/auth/sign-out" method="post">
-            <button className="text-sm font-medium text-red-600 hover:text-red-500 bg-white px-4 py-2 rounded border border-red-200">
-              Keluar
-            </button>
+    <div className="min-h-screen bg-slate-50/50 p-4 md:p-8 font-sans">
+      <div className="max-w-4xl mx-auto space-y-10">
+        
+        {/* Header Section */}
+        <div className="flex flex-col sm:flex-row justify-between sm:items-end gap-6 pb-6 border-b border-slate-200">
+          <div>
+            <h1 className="text-4xl font-extrabold tracking-tight text-slate-900">
+              Dashboard Penyewa
+            </h1>
+            <p className="text-slate-500 mt-2 text-lg">Pantau informasi kamar dan riwayat tagihan Anda dengan mudah.</p>
+          </div>
+          <form 
+            action={async () => {
+              "use server";
+              const supabase = await createClient();
+              await supabase.auth.signOut();
+              redirect("/login");
+            }}
+          >
+            <Button type="submit" variant="outline" className="text-slate-700 hover:text-white hover:bg-destructive border-slate-300 w-full sm:w-auto transition-all shadow-sm">
+              <LogOut className="mr-2 h-4 w-4" />
+              Keluar Akun
+            </Button>
           </form>
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
-          <h2 className="text-xl font-semibold mb-4">Informasi Kamar</h2>
-          {lease ? (
-            <div className="space-y-2">
-              <p>
-                <span className="text-gray-500">Kamar:</span>{" "}
-                <span className="font-medium">{lease.rooms?.name}</span>
-              </p>
-              <p>
-                <span className="text-gray-500">Mulai Sewa:</span>{" "}
-                <span className="font-medium">
-                  {new Date(lease.start_date).toLocaleDateString("id-ID")}
-                </span>
-              </p>
-              <p>
-                <span className="text-gray-500">Siklus Tagihan:</span>{" "}
-                <span className="font-medium">
-                  Tiap {lease.billing_cycle} bulan
-                </span>
-              </p>
-              <p>
-                <span className="text-gray-500">Biaya Sewa:</span>{" "}
-                <span className="font-medium">
-                  Rp {lease.custom_price.toLocaleString("id-ID")}
-                </span>
-              </p>
-            </div>
-          ) : (
-            <p className="text-gray-500 italic">
-              Anda belum ditempatkan di kamar manapun.
-            </p>
-          )}
-        </div>
+        {/* Room Info Section */}
+        <Card className="shadow-md border-slate-200 bg-white overflow-hidden">
+          <CardHeader className="bg-slate-50 border-b border-slate-100 pb-5">
+            <CardTitle className="text-xl font-bold flex items-center text-slate-800">
+              <Home className="mr-3 h-6 w-6 text-indigo-600" />
+              Informasi Kamar
+            </CardTitle>
+            <CardDescription className="text-sm">Detail penyewaan kamar Anda saat ini</CardDescription>
+          </CardHeader>
+          <CardContent className="pt-6">
+            {lease ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-y-8 gap-x-6">
+                <div className="space-y-2">
+                  <p className="text-xs font-bold uppercase tracking-wider text-slate-400">Nomor Kamar</p>
+                  <p className="text-2xl font-bold text-slate-900">{lease.rooms?.name}</p>
+                </div>
+                <div className="space-y-2">
+                  <p className="text-xs font-bold uppercase tracking-wider text-slate-400">Tanggal Serah Terima</p>
+                  <p className="text-lg font-semibold flex items-center text-slate-800">
+                    <CalendarDays className="mr-2 h-5 w-5 text-indigo-500" />
+                    {new Date(lease.start_date).toLocaleDateString("id-ID", {
+                      year: 'numeric', month: 'long', day: 'numeric'
+                    })}
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  <p className="text-xs font-bold uppercase tracking-wider text-slate-400">Siklus Pembayaran</p>
+                  <p className="text-lg font-semibold text-slate-800">Per {lease.billing_cycle} bulan</p>
+                </div>
+                <div className="space-y-2">
+                  <p className="text-xs font-bold uppercase tracking-wider text-slate-400">Biaya Sewa Bersih</p>
+                  <p className="text-xl font-bold flex items-center text-indigo-700">
+                    <CreditCard className="mr-2 h-5 w-5 text-indigo-500" />
+                    Rp {lease.custom_price.toLocaleString("id-ID")}
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-12 text-center">
+                <div className="h-16 w-16 rounded-full bg-slate-100 flex items-center justify-center mb-4">
+                  <Home className="h-8 w-8 text-slate-400" />
+                </div>
+                <p className="text-slate-800 text-lg font-bold">
+                  Belum Ada Kamar Aktif
+                </p>
+                <p className="text-base text-slate-500 mt-2 max-w-sm">
+                  Anda belum terdaftar atau ditempatkan di kamar manapun. Silakan hubungi pemilik kos.
+                </p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <h2 className="text-xl font-semibold mb-4">Riwayat Tagihan</h2>
+        {/* Invoice History Section */}
+        <div className="pt-6">
+          <div className="mb-6">
+            <h2 className="text-2xl font-bold text-slate-800 tracking-tight">Riwayat Tagihan Anda</h2>
+          </div>
           {lease ? (
             <InvoiceHistory invoices={invoices} />
           ) : (
-            <p className="text-gray-500 italic">Belum ada tagihan.</p>
+            <Card className="shadow-sm border-slate-200 bg-slate-50 opacity-80">
+              <CardContent className="flex justify-center py-10">
+                <p className="text-slate-500 font-medium">Data tagihan tidak tersedia. Tagihan baru akan muncul setelah Anda menempati kamar.</p>
+              </CardContent>
+            </Card>
           )}
         </div>
       </div>

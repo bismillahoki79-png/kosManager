@@ -31,19 +31,6 @@ export default async function SignUpPage(
               Daftar sekarang untuk menemukan kos impian atau kelola properti Anda dengan lebih efisien.
             </p>
           </div>
-          
-          <div className="relative z-10 mt-12">
-            <div className="p-4 bg-white/10 backdrop-blur-sm rounded-xl border border-white/20">
-              <p className="text-sm font-medium">"Aplikasi ini sangat membantu saya dalam mengelola tagihan bulanan!"</p>
-              <div className="mt-3 flex items-center">
-                <div className="h-8 w-8 rounded-full bg-indigo-300 flex items-center justify-center text-xs font-bold text-indigo-800">BS</div>
-                <div className="ml-2 text-xs">
-                  <span className="block font-bold">Budi Santoso</span>
-                  <span className="block text-indigo-200">Penyewa Happy</span>
-                </div>
-              </div>
-            </div>
-          </div>
 
           {/* Abstract Pattern Background */}
           <div className="absolute bottom-0 right-0 -mb-12 -mr-12 w-64 h-64 bg-indigo-500 rounded-full opacity-50 blur-3xl"></div>
@@ -67,14 +54,45 @@ export default async function SignUpPage(
                 </div>
                 <div className="ml-3">
                   <p className="text-sm text-red-700">
-                    {error}
+                    {error as string}
                   </p>
                 </div>
               </div>
             </div>
           )}
 
-          <form className="space-y-4">
+          <form 
+            action={async (formData) => {
+              'use server'
+              const email = formData.get('email') as string
+              const password = formData.get('password') as string
+              const fullName = formData.get('fullName') as string
+              const phone = formData.get('phone') as string
+              
+              const supabase = await createClient()
+
+              const { error } = await supabase.auth.signUp({
+                email,
+                password,
+                options: {
+                  data: {
+                    full_name: fullName,
+                    phone: phone,
+                    role: 'tenant' // Default role
+                  }
+                }
+              })
+
+              if (error) {
+                return redirect(`/sign-up?error=${encodeURIComponent(error.message)}`)
+              }
+
+              // If email confirmation is disabled, user is signed in automatically.
+              // We should redirect to dashboard (middleware will handle routing)
+              return redirect('/')
+            }}
+            className="space-y-4"
+          >
             <div>
               <label htmlFor="fullName" className="block text-sm font-medium text-gray-700 mb-1">
                 Nama Lengkap
@@ -155,36 +173,7 @@ export default async function SignUpPage(
 
             <button
               type="submit"
-              formAction={async (formData) => {
-                'use server'
-                const email = formData.get('email') as string
-                const password = formData.get('password') as string
-                const fullName = formData.get('fullName') as string
-                const phone = formData.get('phone') as string
-                
-                const supabase = await createClient()
-
-                const { error } = await supabase.auth.signUp({
-                  email,
-                  password,
-                  options: {
-                    data: {
-                      full_name: fullName,
-                      phone: phone,
-                      role: 'tenant' // Default role
-                    }
-                  }
-                })
-
-                if (error) {
-                  return redirect(`/sign-up?error=${error.message}`)
-                }
-
-                // If email confirmation is disabled, user is signed in automatically.
-                // We should redirect to dashboard (middleware will handle routing)
-                return redirect('/')
-              }}
-              className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-200 mt-6"
+              className="w-full cursor-pointer flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-200 mt-6"
             >
               Daftar Sekarang
             </button>

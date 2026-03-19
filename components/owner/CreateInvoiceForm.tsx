@@ -3,6 +3,12 @@
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { toast } from 'sonner'
+import { Loader2 } from 'lucide-react'
 
 interface Tenant {
   id: string
@@ -42,88 +48,88 @@ export default function CreateInvoiceForm({ tenants }: Props) {
 
       if (error) throw error
 
-      alert('Tagihan berhasil dibuat!')
+      toast.success('Tagihan berhasil dibuat!')
       setAmount('')
       setDueDate('')
       setSelectedLeaseId('')
       router.refresh()
     } catch (error: any) {
-      alert('Gagal membuat tagihan: ' + error.message)
+      toast.error('Gagal membuat tagihan: ' + error.message)
     } finally {
       setIsLoading(false)
     }
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-      <h3 className="text-lg font-medium text-gray-900">Buat Tagihan Manual</h3>
-      
-      <div>
-        <label htmlFor="tenant" className="block text-sm font-medium text-gray-700">
-          Penyewa / Kamar
-        </label>
-        <select
-          id="tenant"
-          required
-          value={selectedLeaseId}
-          onChange={(e) => setSelectedLeaseId(e.target.value)}
-          className="mt-1 block w-full rounded-md border-gray-300 py-2 pl-3 pr-10 text-base focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm border"
-        >
-          <option value="">Pilih Penyewa</option>
-          {tenants.map((tenant) => (
-            tenant.leases.map((lease) => (
-              <option key={lease.id} value={lease.id}>
-                {tenant.full_name} - Kamar {lease.room.name}
-              </option>
-            ))
-          ))}
-        </select>
-      </div>
-
-      <div>
-        <label htmlFor="amount" className="block text-sm font-medium text-gray-700">
-          Jumlah Tagihan (Rp)
-        </label>
-        <div className="relative mt-1 rounded-md shadow-sm">
-          <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-            <span className="text-gray-500 sm:text-sm">Rp</span>
+    <Card className="shadow-sm border-border bg-card">
+      <CardHeader>
+        <CardTitle className="text-xl">Buat Tagihan Manual</CardTitle>
+        <CardDescription>Atur biaya sewa dan tanggal jatuh tempo untuk penyewa</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="tenant">Penyewa / Kamar</Label>
+            <select
+              id="tenant"
+              required
+              value={selectedLeaseId}
+              onChange={(e) => setSelectedLeaseId(e.target.value)}
+              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <option value="">Pilih Penyewa</option>
+              {tenants.map((tenant) => (
+                tenant.leases.map((lease) => (
+                  <option key={lease.id} value={lease.id}>
+                    {tenant.full_name} - Kamar {lease.room.name}
+                  </option>
+                ))
+              ))}
+            </select>
           </div>
-          <input
-            type="number"
-            name="amount"
-            id="amount"
-            required
-            min="0"
-            className="block w-full rounded-md border-gray-300 pl-10 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-2 border"
-            placeholder="0.00"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-          />
-        </div>
-      </div>
 
-      <div>
-        <label htmlFor="dueDate" className="block text-sm font-medium text-gray-700">
-          Jatuh Tempo
-        </label>
-        <input
-          type="date"
-          name="dueDate"
-          id="dueDate"
-          required
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-2 px-3 border"
-          value={dueDate}
-          onChange={(e) => setDueDate(e.target.value)}
-        />
-      </div>
+          <div className="space-y-2">
+            <Label htmlFor="amount">Jumlah Tagihan (Rp)</Label>
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <span className="text-muted-foreground sm:text-sm">Rp</span>
+              </div>
+              <Input
+                type="number"
+                id="amount"
+                required
+                min="0"
+                className="pl-9"
+                placeholder="0"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+              />
+            </div>
+          </div>
 
-      <button
-        type="submit"
-        disabled={isLoading}
-        className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
-      >
-        {isLoading ? 'Menyimpan...' : 'Buat Tagihan'}
-      </button>
-    </form>
+          <div className="space-y-2">
+            <Label htmlFor="dueDate">Jatuh Tempo</Label>
+            <Input
+              type="date"
+              id="dueDate"
+              required
+              value={dueDate}
+              onChange={(e) => setDueDate(e.target.value)}
+            />
+          </div>
+
+          <Button type="submit" className="w-full mt-4" disabled={isLoading}>
+            {isLoading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Menyimpan...
+              </>
+            ) : (
+              'Buat Tagihan'
+            )}
+          </Button>
+        </form>
+      </CardContent>
+    </Card>
   )
 }

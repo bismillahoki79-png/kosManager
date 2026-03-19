@@ -53,25 +53,6 @@ export default async function LoginPage(props: {
             </p>
           </div>
 
-          <div className="relative z-10 mt-12">
-            <div className="flex -space-x-2">
-              {[1, 2, 3, 4].map((i) => (
-                <div
-                  key={i}
-                  className={`h-10 w-10 rounded-full border-2 border-indigo-600 bg-indigo-${i * 100 + 200} flex items-center justify-center text-xs font-bold text-indigo-800`}
-                >
-                  User
-                </div>
-              ))}
-              <div className="h-10 w-10 rounded-full border-2 border-indigo-600 bg-white flex items-center justify-center text-xs font-bold text-indigo-600">
-                +1k
-              </div>
-            </div>
-            <p className="text-sm text-indigo-200 mt-2">
-              Bergabung dengan ribuan pengguna lainnya.
-            </p>
-          </div>
-
           {/* Abstract Pattern Background */}
           <div className="absolute top-0 right-0 -mt-12 -mr-12 w-64 h-64 bg-indigo-500 rounded-full opacity-50 blur-3xl"></div>
           <div className="absolute bottom-0 left-0 -mb-12 -ml-12 w-64 h-64 bg-indigo-700 rounded-full opacity-50 blur-3xl"></div>
@@ -104,9 +85,7 @@ export default async function LoginPage(props: {
                 </div>
                 <div className="ml-3">
                   <p className="text-sm text-red-700">
-                    {error === "Could not authenticate user"
-                      ? "Email atau password salah."
-                      : error}
+                    {error}
                   </p>
                 </div>
               </div>
@@ -177,12 +156,12 @@ export default async function LoginPage(props: {
               </div>
 
               <div className="text-sm">
-                <a
-                  href="#"
+                <Link
+                  href="/forgot-password"
                   className="font-medium text-indigo-600 hover:text-indigo-500"
                 >
                   Lupa password?
-                </a>
+                </Link>
               </div>
             </div>
 
@@ -200,7 +179,7 @@ export default async function LoginPage(props: {
                 });
 
                 if (error) {
-                  return redirect("/login?error=Could not authenticate user");
+                  return redirect(`/login?error=${encodeURIComponent(error.message)}`);
                 }
 
                 return redirect("/");

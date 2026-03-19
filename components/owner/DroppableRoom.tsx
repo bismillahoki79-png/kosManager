@@ -1,6 +1,15 @@
 'use client'
 
-import { useDroppable } from '@dnd-kit/core'
+import { useDroppable, useDraggable } from '@dnd-kit/core'
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Users, GripVertical } from 'lucide-react'
+
+interface Tenant {
+  id: string
+  full_name: string | null
+  email: string
+}
 
 interface Props {
   room: {
@@ -8,71 +17,123 @@ interface Props {
     name: string
     status: 'Available' | 'Occupied' | 'Storage'
     base_price: number
+    max_tenants?: number
   }
-  tenant?: {
-    full_name: string | null
-    email: string
-  }
+  tenants?: Tenant[]
 }
 
-export default function DroppableRoom({ room, tenant }: Props) {
+function DraggableInRoomTenant({ tenant }: { tenant: Tenant }) {
+  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+    id: tenant.id, // the string ID is enough, dnd-kit uses it globally
+    data: { isRelocating: true } // to distinguish later if needed
+  });
+  
+  const style = transform ? {
+    transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
+    zIndex: 50,
+  } : undefined;
+
+  return (
+    <div 
+      ref={setNodeRef} 
+      style={style} 
+      {...listeners} 
+      {...attributes}
+      title="Tarik untuk memindahkan penyewa"
+      className={`group flex items-center space-x-3 w-full bg-white p-2.5 rounded-md border transition-all cursor-grab active:cursor-grabbing ${
+        isDragging ? 'opacity-70 ring-2 ring-indigo-500 shadow-xl border-indigo-200 scale-105' : 'border-slate-100 hover:border-indigo-300 shadow-sm hover:shadow'
+      }`}
+    >
+      <div className="flex-shrink-0 text-slate-300 group-hover:text-indigo-400">
+         <GripVertical className="h-5 w-5" />
+      </div>
+      <div className="flex-shrink-0 h-9 w-9 bg-indigo-50 rounded-full flex items-center justify-center text-indigo-700 font-bold text-sm border border-indigo-100">
+        {(tenant.full_name || tenant.email).charAt(0).toUpperCase()}
+      </div>
+      <div className="overflow-hidden">
+        <p className="text-sm font-semibold text-slate-800 truncate">
+          {tenant.full_name || 'Tanpa Nama'}
+        </p>
+        <p className="text-xs text-slate-500 truncate">{tenant.email}</p>
+      </div>
+    </div>
+  )
+}
+
+export default function DroppableRoom({ room, tenants = [] }: Props) {
+  const isFull = tenants.length >= (room.max_tenants || 1)
+  const status = isFull ? 'Occupied' : room.status
+
   const { isOver, setNodeRef } = useDroppable({
     id: room.id,
-    disabled: room.status !== 'Available',
+    disabled: isFull || status === 'Storage',
   })
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'Available': return 'bg-green-100 text-green-800 border-green-200'
-      case 'Occupied': return 'bg-red-100 text-red-800 border-red-200'
-      case 'Storage': return 'bg-yellow-100 text-yellow-800 border-yellow-200'
-      default: return 'bg-gray-100 text-gray-800 border-gray-200'
+  const getBadgeVariant = (s: string) => {
+    switch (s) {
+      case 'Available': return 'default'
+      case 'Occupied': return 'destructive'
+      case 'Storage': return 'secondary'
+      default: return 'outline'
     }
   }
 
-  const isHighlighted = isOver && room.status === 'Available'
+  const isHighlighted = isOver && !isFull && status !== 'Storage'
 
   return (
-    <div
+    <Card
       ref={setNodeRef}
-      className={`relative p-4 rounded-lg border-2 transition-all ${
+      className={`relative transition-all shadow-sm ${
         isHighlighted 
-          ? 'border-indigo-500 bg-indigo-50' 
-          : 'border-gray-200 bg-white'
-      } ${room.status === 'Available' ? 'hover:border-indigo-300' : ''}`}
+          ? 'border-indigo-500 ring-2 ring-indigo-500/20 bg-indigo-50/50' 
+          : 'bg-white border-slate-200'
+      } ${!isFull && status !== 'Storage' ? 'hover:border-indigo-300' : ''}`}
     >
-      <div className="flex justify-between items-start mb-2">
-        <h4 className="font-bold text-lg text-gray-800">{room.name}</h4>
-        <span className={`text-xs px-2 py-1 rounded-full border ${getStatusColor(room.status)}`}>
-          {room.status}
-        </span>
-      </div>
+      <CardHeader className="p-5 pb-3 bg-slate-50/50 rounded-t-xl border-b border-slate-100">
+        <div className="flex justify-between items-start mb-1">
+          <CardTitle className="text-lg font-bold text-slate-800">{room.name}</CardTitle>
+          <Badge variant={getBadgeVariant(status) as any} className="shadow-none font-medium">
+            {status}
+          </Badge>
+        </div>
+        <div className="flex items-center justify-between text-sm">
+          <span className="text-slate-500">
+            {room.base_price > 0 ? `Rp ${room.base_price.toLocaleString('id-ID')} / bln` : 'Harga Bebas'}
+          </span>
+          <span className="flex items-center text-slate-500 font-medium">
+            <Users className="w-3.5 h-3.5 mr-1" />
+            {tenants.length} / {room.max_tenants || 1}
+          </span>
+        </div>
+      </CardHeader>
       
-      <div className="text-sm text-gray-600 mb-4">
-        Rp {room.base_price.toLocaleString('id-ID')} / bulan
-      </div>
+      <CardContent className="p-4">
+        <div className={`p-3 flex flex-col gap-2 rounded-lg min-h-[80px] ${
+          tenants.length > 0 ? 'bg-slate-50 border border-slate-100 shadow-inner' : 'bg-slate-50 border-2 border-dashed border-slate-200 flex items-center justify-center'
+        }`}>
+          {tenants.length > 0 ? (
+            tenants.map(tenant => (
+              <DraggableInRoomTenant key={tenant.id} tenant={tenant} />
+            ))
+          ) : (
+             <p className="text-xs text-slate-400 text-center w-full italic">
+               Tarik penyewa ke kamar ini
+             </p>
+          )}
 
-      <div className={`mt-2 p-3 rounded-md min-h-[60px] flex items-center ${
-        tenant ? 'bg-gray-50 border border-gray-200' : 'bg-gray-50 border border-dashed border-gray-300'
-      }`}>
-        {tenant ? (
-          <div className="flex items-center space-x-3 w-full">
-             <div className="flex-shrink-0 h-8 w-8 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600 font-bold text-sm">
-              {(tenant.full_name || tenant.email).charAt(0).toUpperCase()}
-            </div>
-            <div className="overflow-hidden">
-              <p className="text-sm font-medium text-gray-900 truncate">
-                {tenant.full_name || 'Tanpa Nama'}
-              </p>
-              <p className="text-xs text-gray-500 truncate">{tenant.email}</p>
-            </div>
-          </div>
-        ) : (
-          <p className="text-xs text-gray-400 text-center w-full italic">
-            {room.status === 'Available' ? 'Tarik penyewa ke sini' : 'Kamar tidak tersedia'}
-          </p>
-        )}
-      </div>
-    </div>
+          {!isFull && tenants.length > 0 && (
+             <p className="text-xs text-slate-400 text-center w-full italic mt-2 border-t border-dashed border-slate-200 pt-3">
+               Sisa {((room.max_tenants || 1) - tenants.length)} slot kursi
+             </p>
+          )}
+
+          {isFull && tenants.length === 0 && (
+            <p className="text-xs text-slate-400 text-center w-full italic text-destructive">
+              Kamar tidak tersedia
+            </p>
+          )}
+        </div>
+      </CardContent>
+    </Card>
   )
 }

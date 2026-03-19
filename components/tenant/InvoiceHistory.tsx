@@ -2,6 +2,10 @@
 
 import { useState } from 'react'
 import PaymentUploadForm from './PaymentUploadForm'
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Upload, FileText, CheckCircle2 } from 'lucide-react'
 
 interface Invoice {
   id: string
@@ -23,77 +27,91 @@ interface Props {
 export default function InvoiceHistory({ invoices }: Props) {
   const [selectedInvoiceId, setSelectedInvoiceId] = useState<string | null>(null)
 
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'paid':
+        return <Badge variant="default" className="bg-green-500 hover:bg-green-600">Lunas</Badge>
+      case 'pending_verification':
+        return <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 hover:bg-yellow-200 border-yellow-200">Menunggu Konfirmasi</Badge>
+      case 'unpaid':
+      default:
+        return <Badge variant="destructive">Belum Bayar</Badge>
+    }
+  }
+
   return (
-    <div className="bg-white shadow overflow-hidden sm:rounded-md">
-      <ul className="divide-y divide-gray-200">
-        {invoices.length === 0 ? (
-          <li className="px-4 py-4 sm:px-6 text-center text-gray-500">
-            Tidak ada tagihan.
-          </li>
-        ) : (
-          invoices.map((invoice) => (
-            <li key={invoice.id}>
-              <div className="px-4 py-4 sm:px-6">
-                <div className="flex items-center justify-between">
-                  <div className="text-sm font-medium text-indigo-600 truncate">
-                    Tagihan Kamar {invoice.lease.room.name}
-                  </div>
-                  <div className="ml-2 flex-shrink-0 flex">
-                    <span
-                      className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                        ${invoice.status === 'paid' ? 'bg-green-100 text-green-800' : 
-                          invoice.status === 'pending_verification' ? 'bg-yellow-100 text-yellow-800' : 
-                          'bg-red-100 text-red-800'}`}
-                    >
-                      {invoice.status === 'pending_verification' ? 'Menunggu Konfirmasi' : 
-                       invoice.status === 'paid' ? 'Lunas' : 'Belum Bayar'}
-                    </span>
-                  </div>
-                </div>
-                <div className="mt-2 sm:flex sm:justify-between">
-                  <div className="sm:flex">
-                    <p className="flex items-center text-sm text-gray-500">
-                      Rp {invoice.amount.toLocaleString('id-ID')}
-                    </p>
-                    <p className="mt-2 flex items-center text-sm text-gray-500 sm:mt-0 sm:ml-6">
-                      Jatuh Tempo: {new Date(invoice.due_date).toLocaleDateString('id-ID')}
-                    </p>
-                  </div>
-                  {invoice.status === 'unpaid' && (
-                    <div className="mt-2 flex items-center text-sm text-gray-500 sm:mt-0">
-                      <button
-                        onClick={() => setSelectedInvoiceId(invoice.id)}
-                        className="font-medium text-indigo-600 hover:text-indigo-500"
-                      >
-                        Upload Bukti Bayar
-                      </button>
+    <>
+      <Card className="shadow-sm border-border">
+        <CardHeader>
+          <CardTitle className="text-xl">Riwayat Tagihan</CardTitle>
+        </CardHeader>
+        <CardContent className="p-0">
+          <ul className="divide-y divide-border">
+            {invoices.length === 0 ? (
+              <li className="px-6 py-8 text-center text-muted-foreground flex flex-col items-center">
+                <CheckCircle2 className="h-10 w-10 text-muted-foreground/30 mb-2" />
+                <p>Tidak ada tagihan.</p>
+              </li>
+            ) : (
+              invoices.map((invoice) => (
+                <li key={invoice.id} className="hover:bg-muted/30 transition-colors">
+                  <div className="px-6 py-5">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="text-sm font-semibold text-primary truncate">
+                        Tagihan Kamar <span className="font-bold">{invoice.lease.room.name}</span>
+                      </div>
+                      <div className="ml-2 flex-shrink-0 flex">
+                        {getStatusBadge(invoice.status)}
+                      </div>
                     </div>
-                  )}
-                  {invoice.status !== 'unpaid' && invoice.proof_url && (
-                    <div className="mt-2 flex items-center text-sm text-gray-500 sm:mt-0">
-                      <a 
-                        href={invoice.proof_url} 
-                        target="_blank" 
-                        rel="noreferrer"
-                        className="font-medium text-gray-500 hover:text-gray-700"
-                      >
-                        Lihat Bukti
-                      </a>
+                    <div className="mt-2 flex flex-col sm:flex-row sm:justify-between sm:items-end">
+                      <div className="space-y-1">
+                        <p className="flex items-center text-sm font-medium">
+                          Rp {invoice.amount.toLocaleString('id-ID')}
+                        </p>
+                        <p className="flex items-center text-xs text-muted-foreground">
+                          Jatuh Tempo: <span className="font-medium text-foreground ml-1">{new Date(invoice.due_date).toLocaleDateString('id-ID')}</span>
+                        </p>
+                      </div>
+                      
+                      <div className="mt-4 sm:mt-0 flex items-center space-x-3">
+                        {invoice.status === 'unpaid' && (
+                          <Button
+                            size="sm"
+                            onClick={() => setSelectedInvoiceId(invoice.id)}
+                            className="h-8"
+                          >
+                            <Upload className="mr-2 h-4 w-4" />
+                            Upload Bukti
+                          </Button>
+                        )}
+                        {invoice.status !== 'unpaid' && invoice.proof_url && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-8"
+                            onClick={() => window.open(invoice.proof_url!, '_blank')}
+                          >
+                            <FileText className="mr-2 h-4 w-4" />
+                            Lihat Bukti
+                          </Button>
+                        )}
+                      </div>
                     </div>
-                  )}
-                </div>
-              </div>
-            </li>
-          ))
-        )}
-      </ul>
-      
+                  </div>
+                </li>
+              ))
+            )}
+          </ul>
+        </CardContent>
+      </Card>
+
       {selectedInvoiceId && (
         <PaymentUploadForm 
           invoiceId={selectedInvoiceId} 
           onClose={() => setSelectedInvoiceId(null)} 
         />
       )}
-    </div>
+    </>
   )
 }

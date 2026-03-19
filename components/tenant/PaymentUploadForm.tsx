@@ -3,6 +3,12 @@
 import { createClient } from '@/lib/supabase/client'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { toast } from 'sonner'
+import { Loader2 } from 'lucide-react'
 
 interface Props {
   invoiceId: string
@@ -48,56 +54,62 @@ export default function PaymentUploadForm({ invoiceId, onClose }: Props) {
 
       if (updateError) throw updateError
 
-      alert('Bukti pembayaran berhasil diupload!')
+      toast.success('Bukti pembayaran berhasil diunggah!')
       onClose()
       router.refresh()
     } catch (error: any) {
-      alert('Gagal upload: ' + error.message)
+      toast.error('Gagal upload: ' + error.message)
     } finally {
       setIsLoading(false)
     }
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
-        <h3 className="text-lg font-medium text-gray-900 mb-4">Upload Bukti Pembayaran</h3>
-        <form onSubmit={handleUpload}>
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Pilih Gambar
-            </label>
-            <input
-              type="file"
-              accept="image/*"
-              required
-              onChange={(e) => setFile(e.target.files?.[0] || null)}
-              className="block w-full text-sm text-gray-500
-                file:mr-4 file:py-2 file:px-4
-                file:rounded-full file:border-0
-                file:text-sm file:font-semibold
-                file:bg-indigo-50 file:text-indigo-700
-                hover:file:bg-indigo-100"
-            />
-          </div>
-          <div className="flex justify-end space-x-3">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-            >
-              Batal
-            </button>
-            <button
-              type="submit"
-              disabled={isLoading || !file}
-              className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
-            >
-              {isLoading ? 'Uploading...' : 'Upload'}
-            </button>
-          </div>
-        </form>
-      </div>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-4 animate-in fade-in-0">
+      <Card className="w-full max-w-md shadow-lg border-primary/10">
+        <CardHeader>
+          <CardTitle>Upload Bukti Pembayaran</CardTitle>
+          <CardDescription>Pilih gambar foto atau screenshot bukti transfer.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleUpload} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="payment-file">Pilih Gambar</Label>
+              <Input
+                id="payment-file"
+                type="file"
+                accept="image/*"
+                required
+                onChange={(e) => setFile(e.target.files?.[0] || null)}
+                className="cursor-pointer file:text-primary file:font-semibold file:bg-primary/10 hover:file:bg-primary/20 file:border-0 file:rounded-md"
+              />
+            </div>
+            <div className="flex justify-end space-x-3 pt-4 border-t border-border mt-4">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={onClose}
+                disabled={isLoading}
+              >
+                Batal
+              </Button>
+              <Button
+                type="submit"
+                disabled={isLoading || !file}
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Mengunggah...
+                  </>
+                ) : (
+                  'Upload'
+                )}
+              </Button>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
     </div>
   )
 }
