@@ -41,7 +41,7 @@ type Room = {
   name: string;
   status: "Available" | "Occupied" | "Storage";
   base_price: number;
-  max_tenants?: number | string;
+  max_tenants?: number;
 };
 
 interface Props {
@@ -475,7 +475,7 @@ export default function RoomManagement({
 
   const handleAddRoomSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const finalMaxTenants = newRoomData.max_tenants === "" ? 1 : Number(newRoomData.max_tenants);
+    const finalMaxTenants = String(newRoomData.max_tenants) === "" ? 1 : Number(newRoomData.max_tenants);
     setIsAddingRoom(true);
     try {
       const { data, error } = await supabase
@@ -496,7 +496,7 @@ export default function RoomManagement({
         description: `Kamar ${data.name} siap digunakan.`,
       });
       setIsAddRoomOpen(false);
-      setNewRoomData({ name: "", max_tenants: ""});
+      setNewRoomData({ name: "", max_tenants: 1});
     } catch (error: any) {
       toast.error("Gagal membuat kamar: " + error.message);
     } finally {
