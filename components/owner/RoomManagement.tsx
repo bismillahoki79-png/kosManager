@@ -683,12 +683,14 @@ export default function RoomManagement({
                 min="1"
                 required
                 value={newRoomData.max_tenants}
+                onFocus={(e) => e.target.select()}
                 onChange={(e) =>
                   setNewRoomData({
                     ...newRoomData,
-                    max_tenants: parseInt(e.target.value) || 1,
+                    max_tenants: parseInt(e.target.value),
                   })
                 }
+                placeholder="misal: 2 (biarkan kosong untuk default 1)"
               />
             </div>
             <DialogFooter className="pt-4">
