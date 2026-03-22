@@ -41,7 +41,7 @@ type Room = {
   name: string;
   status: "Available" | "Occupied" | "Storage";
   base_price: number;
-  max_tenants?: number;
+  max_tenants?: number | string;
 };
 
 interface Props {
