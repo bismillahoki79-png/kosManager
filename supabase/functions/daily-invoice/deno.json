@@ -1,0 +1,9 @@
+{
+  "name": "daily-invoice",
+  "version": "1.0.0",
+  "description": "Daily invoice generation based on billing cycles",
+  "main": "index.ts",
+  "imports": {
+    "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@2"
+  }
+}

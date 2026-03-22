@@ -31,7 +31,7 @@ export default function DraggableTenant({ tenant }: Props) {
       }`}
     >
       <CardContent className="p-3 flex items-center space-x-3">
-        <div className="flex-shrink-0 h-8 w-8 bg-primary/10 rounded-full flex items-center justify-center text-primary font-bold text-sm">
+        <div className="shrink-0 h-8 w-8 bg-primary/10 rounded-full flex items-center justify-center text-primary font-bold text-sm">
           {(tenant.full_name || tenant.email).charAt(0).toUpperCase()}
         </div>
         <div className="overflow-hidden">

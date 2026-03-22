@@ -76,7 +76,7 @@ export default async function UpdatePasswordPage(props: {
 
               // Sign out after updating password to force immediate re-login safely
               await supabase.auth.signOut();
-              return redirect("/login?error=" + encodeURIComponent("Password berhasil diubah. Silakan masuk."));
+              return redirect("/login?message=" + encodeURIComponent("Password berhasil diubah. Silakan masuk."));
             }}
             className="space-y-6"
           >
