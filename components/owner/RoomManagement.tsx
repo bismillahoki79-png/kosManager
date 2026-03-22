@@ -475,13 +475,14 @@ export default function RoomManagement({
 
   const handleAddRoomSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const finalMaxTenants = newRoomData.max_tenants === "" ? 1 : Number(newRoomData.max_tenants);
     setIsAddingRoom(true);
     try {
       const { data, error } = await supabase
         .from("rooms")
         .insert({
           name: newRoomData.name,
-          max_tenants: newRoomData.max_tenants,
+          max_tenants: finalMaxTenants,
           base_price: 0,
           status: "Available",
         })
@@ -495,7 +496,7 @@ export default function RoomManagement({
         description: `Kamar ${data.name} siap digunakan.`,
       });
       setIsAddRoomOpen(false);
-      setNewRoomData({ name: "", max_tenants: 1 });
+      setNewRoomData({ name: "", max_tenants: ""});
     } catch (error: any) {
       toast.error("Gagal membuat kamar: " + error.message);
     } finally {
